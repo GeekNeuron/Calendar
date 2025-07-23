@@ -1,0 +1,64 @@
+{
+  "median_historical_events": [
+    {
+      "id": 1,
+      "event_name_fa": "اتحاد قبایل ماد و تأسیس هگمتانه",
+      "event_name_en": "Unification of Median Tribes and Founding of Hegmataneh",
+      "historical_period_fa": "دوره مادها (پایه‌گذاری)",
+      "historical_period_en": "Median Period (Founding)",
+      "approximate_date_fa": "حدود ۷۰۰ پیش از میلاد",
+      "approximate_date_en": "circa 700 BCE",
+      "description_fa": "بر اساس روایت هرودوت، دیاکو با جلب اعتماد قبایل پراکنده ماد، به عنوان نخستین پادشاه انتخاب شد. او با بنیان نهادن پایتختی مستحکم به نام هگمتانه (همدان امروزی) و ایجاد تشریفات درباری، سنگ بنای نخستین دولت متمرکز در فلات ایران را گذاشت.",
+      "key_elements_fa": ["دیاکو", "هگمتانه", "اتحاد قبایل", "هرودوت", "دولت متمرکز"],
+      "key_elements_en": ["Deioces", "Hegmataneh (Ecbatana)", "Unification of Tribes", "Herodotus", "Centralized State"]
+    },
+    {
+      "id": 2,
+      "event_name_fa": "جنگ فرورتیش با آشور و سلطه سکاها",
+      "event_name_en": "Phraortes's War with Assyria and Scythian Domination",
+      "historical_period_fa": "دوره مادها (نبردها)",
+      "historical_period_en": "Median Period (Struggles)",
+      "approximate_date_fa": "حدود ۶۷۵ تا ۶۵۳ پیش از میلاد",
+      "approximate_date_en": "circa 675-653 BCE",
+      "description_fa": "فرورتیش، پسر دیاکو، پس از متحد کردن پارس‌ها، علیه امپراتوری قدرتمند آشور اعلان جنگ کرد اما شکست خورد و کشته شد. پس از مرگ او، ماد برای حدود ۲۸ سال تحت سلطه و تاخت و تاز اقوام سکایی قرار گرفت.",
+      "key_elements_fa": ["فرورتیش", "امپراتوری آشور", "سکاها", "استقلال"],
+      "key_elements_en": ["Phraortes", "Assyrian Empire", "Scythians", "Independence"]
+    },
+    {
+      "id": 3,
+      "event_name_fa": "سقوط نینوا، پایتخت آشور",
+      "event_name_en": "Fall of Nineveh, the Assyrian Capital",
+      "historical_period_fa": "دوره مادها (اوج قدرت)",
+      "historical_period_en": "Median Period (Apogee)",
+      "approximate_date_fa": "۶۱۲ پیش از میلاد",
+      "approximate_date_en": "612 BCE",
+      "description_fa": "هووخشتره، بزرگترین پادشاه ماد، ارتش را نوسازی کرد و با نبوپلسر، پادشاه بابل، متحد شد. ارتش مشترک ماد و بابل در یک حمله تاریخی، نینوا، پایتخت امپراتوری ستمگر آشور را فتح و ویران کرد. این رویداد، ماد را به یک قدرت بزرگ جهانی تبدیل کرد.",
+      "key_elements_fa": ["هووخشتره", "نبوپلسر", "نینوا", "امپراتوری آشور", "اتحاد با بابل"],
+      "key_elements_en": ["Cyaxares", "Nabopolassar", "Nineveh", "Assyrian Empire", "Alliance with Babylonia"]
+    },
+    {
+      "id": 4,
+      "event_name_fa": "نبرد هالیس (جنگ خورشیدگرفتگی)",
+      "event_name_en": "Battle of Halys (The Battle of the Eclipse)",
+      "historical_period_fa": "دوره مادها (اوج قدرت)",
+      "historical_period_en": "Median Period (Apogee)",
+      "approximate_date_fa": "۲۸ مه ۵۸۵ پیش از میلاد",
+      "approximate_date_en": "May 28, 585 BCE",
+      "description_fa": "در اوج جنگ میان سپاه ماد به رهبری هووخشتره و پادشاهی لیدی در غرب آناتولی، یک خورشیدگرفتگی کامل رخ داد. دو طرف این پدیده را نشانه‌ای الهی پنداشته، جنگ را متوقف کردند و پیمان صلح بستند. این رویداد مرز غربی شاهنشاهی ماد را تثبیت کرد.",
+      "key_elements_fa": ["هووخشتره", "لیدی", "خورشیدگرفتگی", "پیمان صلح", "رودخانه هالیس"],
+      "key_elements_en": ["Cyaxares", "Lydia", "Solar Eclipse", "Peace Treaty", "Halys River"]
+    },
+    {
+      "id": 5,
+      "event_name_fa": "انتقال قدرت از آستیاگ به کوروش بزرگ",
+      "event_name_en": "Transfer of Power from Astyages to Cyrus the Great",
+      "historical_period_fa": "دوره مادها (پایانی)",
+      "historical_period_en": "Median Period (End)",
+      "approximate_date_fa": "۵۵۰ پیش از میلاد",
+      "approximate_date_en": "550 BCE",
+      "description_fa": "کوروش، پادشاه پارس و نوه دختری آستیاگ (آخرین پادشاه ماد)، علیه او شورش کرد. به دلیل نارضایتی اشراف ماد از آستیاگ، آن‌ها به کوروش پیوستند و قدرت به راحتی به او منتقل شد. این رویداد بیشتر یک جابجایی قدرت درون‌خاندانی بود تا یک فتح خارجی و پایانی بر دوره ماد و آغازی بر شاهنشاهی هخامنشی شد.",
+      "key_elements_fa": ["آستیاگ", "کوروش بزرگ", "هگمتانه", "شاهنشاهی هخامنشی", "انتقال قدرت"],
+      "key_elements_en": ["Astyages", "Cyrus the Great", "Hegmataneh (Ecbatana)", "Achaemenid Empire", "Transfer of Power"]
+    }
+  ]
+}
