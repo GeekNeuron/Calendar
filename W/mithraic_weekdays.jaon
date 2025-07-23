@@ -1,0 +1,60 @@
+{
+  "mithraic_weekdays": [
+    {
+      "day_number": 1,
+      "name_mithraic_fa": "کیوان‌شید",
+      "celestial_body_fa": "کیوان",
+      "celestial_body_en": "Saturn",
+      "modern_equivalent_fa": "شنبه",
+      "modern_equivalent_en": "Saturday"
+    },
+    {
+      "day_number": 2,
+      "name_mithraic_fa": "مهرشید",
+      "celestial_body_fa": "مهر (خورشید)",
+      "celestial_body_en": "Sun",
+      "modern_equivalent_fa": "یکشنبه",
+      "modern_equivalent_en": "Sunday"
+    },
+    {
+      "day_number": 3,
+      "name_mithraic_fa": "مه‌شید",
+      "celestial_body_fa": "مه (ماه)",
+      "celestial_body_en": "Moon",
+      "modern_equivalent_fa": "دوشنبه",
+      "modern_equivalent_en": "Monday"
+    },
+    {
+      "day_number": 4,
+      "name_mithraic_fa": "بهرام‌شید",
+      "celestial_body_fa": "بهرام (مریخ)",
+      "celestial_body_en": "Mars",
+      "modern_equivalent_fa": "سه‌شنبه",
+      "modern_equivalent_en": "Tuesday"
+    },
+    {
+      "day_number": 5,
+      "name_mithraic_fa": "تیرشید",
+      "celestial_body_fa": "تیر (عطارد)",
+      "celestial_body_en": "Mercury",
+      "modern_equivalent_fa": "چهارشنبه",
+      "modern_equivalent_en": "Wednesday"
+    },
+    {
+      "day_number": 6,
+      "name_mithraic_fa": "اورمزدشید",
+      "celestial_body_fa": "اورمزد (مشتری)",
+      "celestial_body_en": "Jupiter",
+      "modern_equivalent_fa": "پنجشنبه",
+      "modern_equivalent_en": "Thursday"
+    },
+    {
+      "day_number": 7,
+      "name_mithraic_fa": "ناهیدشید",
+      "celestial_body_fa": "ناهید (زهره)",
+      "celestial_body_en": "Venus",
+      "modern_equivalent_fa": "آدینه (جمعه)",
+      "modern_equivalent_en": "Friday"
+    }
+  ]
+}
