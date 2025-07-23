@@ -1,0 +1,88 @@
+{
+  "elamite_historical_events": [
+    {
+      "id": 1,
+      "event_name_fa": "ابداع خط نیا-ایلامی",
+      "event_name_en": "Invention of Proto-Elamite Script",
+      "historical_period_fa": "دوره نیا-ایلامی",
+      "historical_period_en": "Proto-Elamite Period",
+      "approximate_date_fa": "حدود ۳۱۰۰ پیش از میلاد",
+      "approximate_date_en": "circa 3100 BCE",
+      "description_fa": "عیلامیان یکی از قدیمی‌ترین نظام‌های نوشتاری تاریخ را ابداع کردند که عمدتاً برای مقاصد اداری و اقتصادی به کار می‌رفت. این خط که هنوز کاملاً رمزگشایی نشده، نشان‌دهنده استقلال فرهنگی عیلام از تمدن سومر است.",
+      "key_elements_fa": ["خط نیا-ایلامی", "شوش", "استقلال فرهنگی"],
+      "key_elements_en": ["Proto-Elamite script", "Susa", "Cultural Independence"]
+    },
+    {
+      "id": 2,
+      "event_name_fa": "انعقاد پیمان‌نامه نارام‌سین",
+      "event_name_en": "Treaty of Naram-Sin",
+      "historical_period_fa": "دوره ایلامی کهن",
+      "historical_period_en": "Old Elamite Period",
+      "approximate_date_fa": "حدود ۲۲۵۰ پیش از میلاد",
+      "approximate_date_en": "circa 2250 BCE",
+      "description_fa": "یکی از قدیمی‌ترین معاهده‌های بین‌المللی تاریخ، میان پادشاه اَکَدی (نارام‌سین) و یک حاکم عیلامی منعقد شد. این پیمان نشان‌دهنده اهمیت و قدرت سیاسی عیلام به عنوان یک طرف قرارداد برابر با امپراتوری اکد است.",
+      "key_elements_fa": ["نارام‌سین", "معاهده بین‌المللی", "زبان عیلامی"],
+      "key_elements_en": ["Naram-Sin", "International Treaty", "Elamite Language"]
+    },
+    {
+      "id": 3,
+      "event_name_fa": "سقوط پادشاهی اور",
+      "event_name_en": "Fall of the Ur III Dynasty",
+      "historical_period_fa": "دوره ایلامی کهن",
+      "historical_period_en": "Old Elamite Period",
+      "approximate_date_fa": "حدود ۲۰۰۴ پیش از میلاد",
+      "approximate_date_en": "circa 2004 BCE",
+      "description_fa": "اتحادی از نیروهای عیلامی و سیماشکی به شهر اور (پایتخت سومریان) حمله کرده، آن را غارت نمودند و به سلطه سلسله سوم اور پایان دادند. این رویداد قدرت نظامی عیلام را به خوبی نشان می‌دهد.",
+      "key_elements_fa": ["اور", "سومر", "سیماشکی", "قدرت نظامی"],
+      "key_elements_en": ["Ur", "Sumer", "Shimashki", "Military Power"]
+    },
+    {
+      "id": 4,
+      "event_name_fa": "ساخت زیگورات چغازنبیل",
+      "event_name_en": "Construction of Chogha Zanbil Ziggurat",
+      "historical_period_fa": "دوره ایلامی میانه (دوران طلایی)",
+      "historical_period_en": "Middle Elamite Period (Golden Age)",
+      "approximate_date_fa": "حدود ۱۲۵۰ پیش از میلاد",
+      "approximate_date_en": "circa 1250 BCE",
+      "description_fa": "پادشاه بزرگ، اونتاش نپیریشا، شهر مذهبی 'دور-اونتاش' و زیگورات عظیم چغازنبیل را بنا کرد. این بنای باشکوه برای ستایش دو خدای بزرگ عیلامی (اینشوشیناک و نپیریشا) ساخته شد و نماد وحدت سیاسی و مذهبی امپراتوری عیلام بود. این اثر اولین میراث جهانی یونسکو در ایران است.",
+      "key_elements_fa": ["اونتاش نپیریشا", "چغازنبیل", "زیگورات", "اینشوشیناک", "یونسکو"],
+      "key_elements_en": ["Untash-Napirisha", "Chogha Zanbil", "Ziggurat", "Inshushinak", "UNESCO"]
+    },
+    {
+      "id": 5,
+      "event_name_fa": "فتح بابل و غارت آثار هنری",
+      "event_name_en": "Conquest of Babylon and Plunder of Artworks",
+      "historical_period_fa": "دوره ایلامی میانه (دوران طلایی)",
+      "historical_period_en": "Middle Elamite Period (Golden Age)",
+      "approximate_date_fa": "حدود ۱۱۵۸ پیش از میلاد",
+      "approximate_date_en": "circa 1158 BCE",
+      "description_fa": "پادشاه قدرتمند، شوتروک ناهونته، به بابل لشکر کشید و گنجینه‌های هنری بی‌شماری را به عنوان غنیمت به شوش آورد. مهم‌ترین این غنائم، لوح قانون حمورابی و لوح پیروزی نارام‌سین بودند. این اقدام اوج قدرت و اعتماد به نفس عیلام را نشان می‌دهد.",
+      "key_elements_fa": ["شوتروک ناهونته", "بابل", "لوح حمورابی", "غنیمت جنگی"],
+      "key_elements_en": ["Shutruk-Nakhunte", "Babylon", "Stele of Hammurabi", "War booty"]
+    },
+    {
+      "id": 6,
+      "event_name_fa": "ویرانی شوش توسط آشوربانیپال",
+      "event_name_en": "Sack of Susa by Ashurbanipal",
+      "historical_period_fa": "دوره ایلامی نو",
+      "historical_period_en": "Neo-Elamite Period",
+      "approximate_date_fa": "حدود ۶۴۶ پیش از میلاد",
+      "approximate_date_en": "circa 646 BCE",
+      "description_fa": "این رویداد نقطه پایانی بر قدرت سیاسی مستقل عیلام بود. آشوربانیپال، پادشاه آشور، پس از جنگی خونین، شوش را به طور کامل ویران کرد. او در کتیبه‌های خود با افتخار این ویرانی عظیم را شرح داده است.",
+      "key_elements_fa": ["آشوربانیپال", "امپراتوری آشور", "ویرانی شوش", "پایان استقلال"],
+      "key_elements_en": ["Ashurbanipal", "Assyrian Empire", "Sack of Susa", "End of Independence"]
+    },
+    {
+      "id": 7,
+      "event_name_fa": "ادغام در شاهنشاهی هخامنشی",
+      "event_name_en": "Integration into the Achaemenid Empire",
+      "historical_period_fa": "دوره ایلامی نو (پایانی)",
+      "historical_period_en": "Neo-Elamite Period (Late)",
+      "approximate_date_fa": "حدود ۵۳۹ پیش از میلاد",
+      "approximate_date_en": "circa 539 BCE",
+      "description_fa": "پس از سقوط عیلام، فرهنگ و تمدن آن در قدرت‌های نوظهور ایرانی (ماد و پارس) ادغام شد. هخامنشیان عمیقاً تحت تأثیر نظام اداری عیلام بودند و خط عیلامی یکی از سه زبان رسمی امپراتوری آن‌ها شد. شوش نیز به عنوان یکی از پایتخت‌های هخامنشی به حیات خود ادامه داد.",
+      "key_elements_fa": ["هخامنشیان", "میراث فرهنگی", "خط عیلامی", "نظام اداری"],
+      "key_elements_en": ["Achaemenids", "Cultural Legacy", "Elamite script", "Administrative System"]
+    }
+  ]
+}
