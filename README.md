@@ -1,41 +1,33 @@
 @echo off
 chcp 65001 > nul
+title Python Local Package Installer
 
+echo =================================================================
+echo    Installer baraye package-haye Python dar hamin pooshe
+echo =================================================================
 echo.
-echo ====================================================================
-echo      IN SCRIPT TANZIMATE PROXY, DNS VA SHABAKE RA RESET MIKONAD
-echo ====================================================================
-echo.
-echo Baraye ejra, bayad dastresie Administrator dashte bashid.
-echo.
-pause
+echo Press any key to start the installation...
+pause > nul
 cls
 
-echo [1/3] Dar hale reset kardan tanzimate Proxy...
-:: Non-aktif kardan proxy
-reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f
-:: Pak kardan adres proxy server
-reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /f > nul 2>&1
-echo Tanzimate Proxy reset shod.
 echo.
+echo [+] Dar hale barresie package-haye .whl ...
+FOR %%f IN (*.whl) DO (
+    echo [*] Nasbe package: %%f
+    pip install "%%f"
+)
 
-echo [2/3] Dar hale reset kardan Winsock va TCP/IP...
-netsh winsock reset
-netsh int ip reset
-echo Winsock va TCP/IP reset shod.
 echo.
+echo [+] Dar hale barresie package-haye .tar.gz ...
+FOR %%f IN (*.tar.gz) DO (
+    echo [*] Nasbe package: %%f
+    pip install "%%f"
+)
 
-echo [3/3] Dar hale pak kardan cache DNS va gereftan IP jadid...
-ipconfig /release
-ipconfig /renew
-ipconfig /flushdns
-echo Cache DNS pak shod.
 echo.
-
-echo ====================================================================
-echo      *** HAME MOارد با موفقیت انجام شد ***
-echo ====================================================================
+echo =================================================================
+echo    Tamame package-ha barresi va nasb shodand.
+echo =================================================================
 echo.
-echo !! Mohem: Baraye tatbigh kamel taghirat, lotfan system khod ra restart konid. !!
-echo.
-pause
+echo Press any key to exit...
+pause > nul
