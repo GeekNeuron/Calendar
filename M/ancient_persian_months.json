@@ -1,0 +1,76 @@
+{
+  "ancient_persian_months": [
+    {
+      "month_number": 1,
+      "name_fa": "فروردین",
+      "name_avestan": "فَروَشی‌ها",
+      "meaning_fa": "نیروهای نگهبان و روان‌های پاک درگذشتگان"
+    },
+    {
+      "month_number": 2,
+      "name_fa": "اردیبهشت",
+      "name_avestan": "اَشا وَهیشتا",
+      "meaning_fa": "بهترین راستی و پاکی"
+    },
+    {
+      "month_number": 3,
+      "name_fa": "خرداد",
+      "name_avestan": "هَئورْوَتات",
+      "meaning_fa": "رسایی و کمال"
+    },
+    {
+      "month_number": 4,
+      "name_fa": "تیر",
+      "name_avestan": "تیشْتْریه",
+      "meaning_fa": "ایزد باران و ستارهٔ تیشتر"
+    },
+    {
+      "month_number": 5,
+      "name_fa": "امرداد",
+      "name_avestan": "اَمِرِتات",
+      "meaning_fa": "بی‌مرگی و جاودانگی"
+    },
+    {
+      "month_number": 6,
+      "name_fa": "شهریور",
+      "name_avestan": "خْشَتْرا وَئیریه",
+      "meaning_fa": "شهریاری و پادشاهی آرمانی"
+    },
+    {
+      "month_number": 7,
+      "name_fa": "مهر",
+      "name_avestan": "میثْرَه",
+      "meaning_fa": "پیمان، دوستی و محبت"
+    },
+    {
+      "month_number": 8,
+      "name_fa": "آبان",
+      "name_avestan": "آپ",
+      "meaning_fa": "آب‌ها و ایزد نگهبان آب"
+    },
+    {
+      "month_number": 9,
+      "name_fa": "آذر",
+      "name_avestan": "آتَر",
+      "meaning_fa": "آتش"
+    },
+    {
+      "month_number": 10,
+      "name_fa": "دی",
+      "name_avestan": "دَثوشو",
+      "meaning_fa": "آفریدگار، دادار"
+    },
+    {
+      "month_number": 11,
+      "name_fa": "بهمن",
+      "name_avestan": "وُهومَنَه",
+      "meaning_fa": "منش نیک"
+    },
+    {
+      "id": 12,
+      "name_fa": "اسفند",
+      "name_avestan": "سْپِنتا آرْمَئیتی",
+      "meaning_fa": "فروتنی و آرامش مقدس"
+    }
+  ]
+}
