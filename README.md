@@ -10,7 +10,7 @@ from tkinter import messagebox
 
 # --- App Configuration ---
 WINDOW_TITLE = "Network Reset Tool"
-WINDOW_GEOMETRY = "500x640" # افزایش جزئی ارتفاع برای اطمینان از فضای کافی
+WINDOW_GEOMETRY = "500x640"
 
 # --- Colors for better visual feedback ---
 SUCCESS_COLOR = "#2ECC71"
@@ -33,7 +33,7 @@ class App(ctk.CTk):
         # --- FIX 1: Footer is created and packed first to ensure visibility ---
         footer_frame = ctk.CTkFrame(self, fg_color="transparent")
         footer_frame.pack(side="bottom", fill="x", pady=(0, 10))
-        footer_label = ctk.CTkLabel(footer_frame, text="Created with ❤️ by GeekNeuron", cursor="hand2", font=ctk.CTkFont(size=12))
+        footer_label = ctk.CTkLabel(footer_frame, text="Created by GeekNeuron", cursor="hand2", font=ctk.CTkFont(size=12))
         footer_label.pack()
         footer_label.configure(text_color="#85C1E9")
         footer_label.bind("<Button-1>", lambda e: self.open_link("https://github.com/GeekNeuron"))
@@ -88,7 +88,7 @@ class App(ctk.CTk):
 
     def log(self, message, status="info"):
         """Appends a styled message to the log display."""
-        icon_map = {"info": "[*]", "success": "[✅]", "error": "[❌]"}
+        icon_map = {"info": "[*]", "success": "[✔️]", "error": "[❌]"}
         icon = icon_map.get(status, "[*]")
         self.log_textbox.configure(state="normal")
         self.log_textbox.insert("end", f"{icon} {message}\n")
