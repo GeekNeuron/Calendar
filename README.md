@@ -8,13 +8,16 @@ import sys
 import webbrowser
 from tkinter import messagebox
 
+# --- Import the correct style library ---
+# The library to install is 'pywinstyles'
+if sys.platform == "win32":
+    from py_window_styles import apply_style
+
 # --- App Configuration ---
 WINDOW_TITLE = "Network Reset Tool"
 WINDOW_GEOMETRY = "500x640"
 
 # --- Colors for better visual feedback ---
-SUCCESS_COLOR = "#2ECC71"
-ERROR_COLOR = "#E74C3C"
 PRIMARY_BUTTON_COLOR = "#3498DB"
 RESTART_BUTTON_COLOR = "#C0392B"
 
@@ -28,18 +31,14 @@ class App(ctk.CTk):
         self.title(WINDOW_TITLE)
         self.geometry(WINDOW_GEOMETRY)
         self.resizable(False, False)
-        ctk.set_appearance_mode("dark")
-
-        # --- Footer is created and packed first to ensure visibility ---
-        footer_frame = ctk.CTkFrame(self, fg_color="transparent")
-        footer_frame.pack(side="bottom", fill="x", pady=(0, 10))
-        footer_label = ctk.CTkLabel(footer_frame, text="Created with ❤️ by GeekNeuron", cursor="hand2", font=ctk.CTkFont(size=12))
-        footer_label.pack()
-        footer_label.configure(text_color="#85C1E9")
-        footer_label.bind("<Button-1>", lambda e: self.open_link("https://github.com/GeekNeuron"))
+        
+        # --- Apply Windows 11 Style ---
+        if sys.platform == "win32":
+            self.after(10, lambda: apply_style(self, "mica"))
+            self.configure(fg_color="transparent")
 
         # --- Main Frame ---
-        self.main_frame = ctk.CTkFrame(self)
+        self.main_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.main_frame.pack(pady=10, padx=20, fill="both", expand=True)
         
         # --- App Icon/Logo ---
@@ -82,10 +81,18 @@ class App(ctk.CTk):
         # --- Smart Restart Button ---
         self.restart_button = ctk.CTkButton(self.main_frame, text="Restart Computer to Apply Changes", command=self.confirm_and_restart, state="disabled", fg_color=RESTART_BUTTON_COLOR, hover_color="#A93226")
         self.restart_button.pack(pady=(10, 15), padx=10, fill="x")
+        
+        # --- Footer ---
+        footer_frame = ctk.CTkFrame(self, fg_color="transparent")
+        footer_frame.pack(side="bottom", fill="x", pady=(0, 10))
+        footer_label = ctk.CTkLabel(footer_frame, text="Created by GeekNeuron", cursor="hand2", font=ctk.CTkFont(size=12))
+        footer_label.pack()
+        footer_label.configure(text_color="#85C1E9")
+        footer_label.bind("<Button-1>", lambda e: self.open_link("https://github.com/GeekNeuron"))
+
 
     def log(self, message, status="info"):
         """Appends a styled message to the log display."""
-        # --- FIX: Using the checkmark emoji ---
         icon_map = {"info": "[*]", "success": "[✔️]", "error": "[❌]"}
         icon = icon_map.get(status, "[*]")
         self.log_textbox.configure(state="normal")
@@ -127,23 +134,14 @@ class App(ctk.CTk):
 
         self.log("--- Starting Network Reset Process ---", status="info")
         
-        # Step 1: Reset Proxy
-        self.log("Resetting Proxy Settings...", status="info")
-        try:
-            subprocess.run('reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f', shell=True, check=True, creationflags=subprocess.CREATE_NO_WINDOW)
-            subprocess.run('reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings" /v ProxyServer /f', shell=True, creationflags=subprocess.CREATE_NO_WINDOW, stderr=subprocess.DEVNULL)
-            self.log("Proxy settings reset successfully.", status="success")
-        except Exception as e:
-            self.log(f"Failed to reset proxy settings: {e}", status="error")
+        self.run_command("reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\" /v ProxyEnable /t REG_DWORD /d 0 /f", "Disabling proxy")
+        self.progress_bar.set(0.1)
+        self.run_command("reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\" /v ProxyServer /f", "Clearing proxy server")
         self.progress_bar.set(0.2)
-
-        # Step 2: Reset Winsock and TCP/IP
         self.run_command("netsh winsock reset", "Resetting Winsock")
         self.progress_bar.set(0.4)
         self.run_command("netsh int ip reset", "Resetting TCP/IP stack")
         self.progress_bar.set(0.6)
-
-        # Step 3: Flush DNS and Renew IP
         self.run_command("ipconfig /flushdns", "Flushing DNS cache")
         self.progress_bar.set(0.8)
         self.run_command("ipconfig /release", "Releasing IP address")
