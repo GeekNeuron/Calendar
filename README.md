@@ -1,6 +1,7 @@
 
 pyinstaller --onefile --windowed --name "Network Reset Tool" --icon="icon.ico" network_reset_tool.py
 
+
 import customtkinter as ctk
 import subprocess
 import ctypes
@@ -8,10 +9,16 @@ import sys
 import webbrowser
 from tkinter import messagebox
 
-# --- Import the correct style library ---
-# The library to install is 'pywinstyles'
+# --- NEW: Import the correct style library with the correct name ---
+# The library to install AND import is 'pywinstyles'
 if sys.platform == "win32":
-    from py_window_styles import apply_style
+    try:
+        from pywinstyles import apply_style
+    except ImportError:
+        # Fallback in case the library is not installed
+        apply_style = None
+else:
+    apply_style = None
 
 # --- App Configuration ---
 WINDOW_TITLE = "Network Reset Tool"
@@ -32,8 +39,8 @@ class App(ctk.CTk):
         self.geometry(WINDOW_GEOMETRY)
         self.resizable(False, False)
         
-        # --- Apply Windows 11 Style ---
-        if sys.platform == "win32":
+        # --- Apply Windows 11 Style if available ---
+        if apply_style:
             self.after(10, lambda: apply_style(self, "mica"))
             self.configure(fg_color="transparent")
 
@@ -85,7 +92,7 @@ class App(ctk.CTk):
         # --- Footer ---
         footer_frame = ctk.CTkFrame(self, fg_color="transparent")
         footer_frame.pack(side="bottom", fill="x", pady=(0, 10))
-        footer_label = ctk.CTkLabel(footer_frame, text="Created by GeekNeuron", cursor="hand2", font=ctk.CTkFont(size=12))
+        footer_label = ctk.CTkLabel(footer_frame, text="Created with ❤️ by GeekNeuron", cursor="hand2", font=ctk.CTkFont(size=12))
         footer_label.pack()
         footer_label.configure(text_color="#85C1E9")
         footer_label.bind("<Button-1>", lambda e: self.open_link("https://github.com/GeekNeuron"))
