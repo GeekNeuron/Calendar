@@ -1,7 +1,6 @@
 
 pyinstaller --onefile --windowed --name "Network Reset Tool" --icon="icon.ico" network_reset_tool.py
 
-
 import customtkinter as ctk
 import subprocess
 import ctypes
@@ -11,7 +10,7 @@ from tkinter import messagebox
 
 # --- App Configuration ---
 WINDOW_TITLE = "Network Reset Tool"
-WINDOW_GEOMETRY = "500x620"
+WINDOW_GEOMETRY = "500x640" # افزایش جزئی ارتفاع برای اطمینان از فضای کافی
 
 # --- Colors for better visual feedback ---
 SUCCESS_COLOR = "#2ECC71"
@@ -31,34 +30,45 @@ class App(ctk.CTk):
         self.resizable(False, False)
         ctk.set_appearance_mode("dark")
 
+        # --- FIX 1: Footer is created and packed first to ensure visibility ---
+        footer_frame = ctk.CTkFrame(self, fg_color="transparent")
+        footer_frame.pack(side="bottom", fill="x", pady=(0, 10))
+        footer_label = ctk.CTkLabel(footer_frame, text="Created with ❤️ by GeekNeuron", cursor="hand2", font=ctk.CTkFont(size=12))
+        footer_label.pack()
+        footer_label.configure(text_color="#85C1E9")
+        footer_label.bind("<Button-1>", lambda e: self.open_link("https://github.com/GeekNeuron"))
+
         # --- Main Frame ---
+        # The main frame now expands to fill the remaining space above the footer
         self.main_frame = ctk.CTkFrame(self)
-        self.main_frame.pack(pady=20, padx=20, fill="both", expand=True)
+        self.main_frame.pack(pady=10, padx=20, fill="both", expand=True)
         
-        # --- NEW: App Icon/Logo ---
+        # --- FIX 3: Increased top padding for the logo ---
         self.logo_label = ctk.CTkLabel(self.main_frame, text="⚙️", font=ctk.CTkFont(size=40))
-        self.logo_label.pack(pady=(0, 5))
+        self.logo_label.pack(pady=(15, 5)) 
 
         # --- Title and Description ---
         self.title_label = ctk.CTkLabel(self.main_frame, text="Network Reset Tool", font=ctk.CTkFont(size=22, weight="bold"))
         self.title_label.pack()
+        
+        # --- FIX 2: Reduced bottom padding for the description label ---
         self.description_label = ctk.CTkLabel(self.main_frame, text="A professional tool to fix your network connectivity issues.", font=ctk.CTkFont(size=13), text_color="gray60")
-        self.description_label.pack(pady=(0, 20))
+        self.description_label.pack(pady=(0, 10))
 
         # --- Primary Action Button ---
         self.reset_button = ctk.CTkButton(self.main_frame, text="Start Full Network Reset", command=self.confirm_and_run_reset, height=40, font=ctk.CTkFont(size=14, weight="bold"), fg_color=PRIMARY_BUTTON_COLOR, hover_color="#2980B9")
         self.reset_button.pack(pady=10, padx=10, fill="x")
         
-        # --- NEW: Progress Bar ---
+        # --- Progress Bar ---
         self.progress_bar = ctk.CTkProgressBar(self.main_frame, orientation="horizontal")
-        self.progress_bar.set(0) # Start empty
+        self.progress_bar.set(0)
         self.progress_bar.pack(pady=(5, 10), padx=10, fill="x")
 
         # --- Log Display Textbox ---
         self.log_textbox = ctk.CTkTextbox(self.main_frame, height=150, state="disabled", font=("Consolas", 11), border_width=1)
         self.log_textbox.pack(pady=10, padx=10, fill="both", expand=True)
 
-        # --- System Shortcuts Frame (using grid for layout) ---
+        # --- System Shortcuts Frame ---
         self.shortcuts_frame = ctk.CTkFrame(self.main_frame)
         self.shortcuts_frame.pack(pady=10, padx=10, fill="x")
         self.shortcuts_frame.grid_columnconfigure((0, 1), weight=1)
@@ -72,16 +82,9 @@ class App(ctk.CTk):
             button.grid(row=(i // 2) + 1, column=i % 2, padx=5, pady=5, sticky="ew")
             
         # --- Smart Restart Button ---
+        # --- FIX 3: Increased bottom padding for the restart button ---
         self.restart_button = ctk.CTkButton(self.main_frame, text="Restart Computer to Apply Changes", command=self.confirm_and_restart, state="disabled", fg_color=RESTART_BUTTON_COLOR, hover_color="#A93226")
-        self.restart_button.pack(pady=(10, 0), padx=10, fill="x")
-
-        # --- Footer ---
-        footer_frame = ctk.CTkFrame(self, fg_color="transparent")
-        footer_frame.pack(side="bottom", fill="x", pady=(0, 10))
-        footer_label = ctk.CTkLabel(footer_frame, text="Created with ❤️ by GeekNeuron", cursor="hand2", font=ctk.CTkFont(size=12))
-        footer_label.pack()
-        footer_label.configure(text_color="#85C1E9")
-        footer_label.bind("<Button-1>", lambda e: self.open_link("https://github.com/GeekNeuron"))
+        self.restart_button.pack(pady=(10, 15), padx=10, fill="x")
 
     def log(self, message, status="info"):
         """Appends a styled message to the log display."""
@@ -106,7 +109,7 @@ class App(ctk.CTk):
             return False
 
     def confirm_and_run_reset(self):
-        """NEW: Show a confirmation dialog before running the reset."""
+        """Show a confirmation dialog before running the reset."""
         answer = messagebox.askyesno(
             title="Confirmation",
             message="Are you sure you want to reset all network settings?\nThis action cannot be undone and may temporarily disconnect you from the internet."
@@ -156,7 +159,7 @@ class App(ctk.CTk):
         self.restart_button.configure(state="normal")
 
     def confirm_and_restart(self):
-        """NEW: Show a confirmation dialog before restarting."""
+        """Show a confirmation dialog before restarting."""
         answer = messagebox.askyesno(
             title="Restart Confirmation",
             message="Are you sure you want to restart your computer now?\nPlease save all your work before proceeding."
