@@ -30,20 +30,19 @@ class App(ctk.CTk):
         self.resizable(False, False)
         ctk.set_appearance_mode("dark")
 
-        # --- FIX 1: Footer is created and packed first to ensure visibility ---
+        # --- Footer is created and packed first to ensure visibility ---
         footer_frame = ctk.CTkFrame(self, fg_color="transparent")
         footer_frame.pack(side="bottom", fill="x", pady=(0, 10))
-        footer_label = ctk.CTkLabel(footer_frame, text="Created by GeekNeuron", cursor="hand2", font=ctk.CTkFont(size=12))
+        footer_label = ctk.CTkLabel(footer_frame, text="Created with ❤️ by GeekNeuron", cursor="hand2", font=ctk.CTkFont(size=12))
         footer_label.pack()
         footer_label.configure(text_color="#85C1E9")
         footer_label.bind("<Button-1>", lambda e: self.open_link("https://github.com/GeekNeuron"))
 
         # --- Main Frame ---
-        # The main frame now expands to fill the remaining space above the footer
         self.main_frame = ctk.CTkFrame(self)
         self.main_frame.pack(pady=10, padx=20, fill="both", expand=True)
         
-        # --- FIX 3: Increased top padding for the logo ---
+        # --- App Icon/Logo ---
         self.logo_label = ctk.CTkLabel(self.main_frame, text="⚙️", font=ctk.CTkFont(size=40))
         self.logo_label.pack(pady=(15, 5)) 
 
@@ -51,7 +50,6 @@ class App(ctk.CTk):
         self.title_label = ctk.CTkLabel(self.main_frame, text="Network Reset Tool", font=ctk.CTkFont(size=22, weight="bold"))
         self.title_label.pack()
         
-        # --- FIX 2: Reduced bottom padding for the description label ---
         self.description_label = ctk.CTkLabel(self.main_frame, text="A professional tool to fix your network connectivity issues.", font=ctk.CTkFont(size=13), text_color="gray60")
         self.description_label.pack(pady=(0, 10))
 
@@ -82,12 +80,12 @@ class App(ctk.CTk):
             button.grid(row=(i // 2) + 1, column=i % 2, padx=5, pady=5, sticky="ew")
             
         # --- Smart Restart Button ---
-        # --- FIX 3: Increased bottom padding for the restart button ---
         self.restart_button = ctk.CTkButton(self.main_frame, text="Restart Computer to Apply Changes", command=self.confirm_and_restart, state="disabled", fg_color=RESTART_BUTTON_COLOR, hover_color="#A93226")
         self.restart_button.pack(pady=(10, 15), padx=10, fill="x")
 
     def log(self, message, status="info"):
         """Appends a styled message to the log display."""
+        # --- FIX: Using the checkmark emoji ---
         icon_map = {"info": "[*]", "success": "[✔️]", "error": "[❌]"}
         icon = icon_map.get(status, "[*]")
         self.log_textbox.configure(state="normal")
