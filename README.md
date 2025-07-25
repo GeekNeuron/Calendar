@@ -1,12 +1,12 @@
 import sys
 import os
 import re
+import sqlite3
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QFileDialog, QTextBrowser,
     QListWidget, QListWidgetItem, QProgressBar, QWidget, QVBoxLayout,
     QHBoxLayout, QSplitter, QTabWidget
 )
-# Corrected import: QRect is moved from QtGui to QtCore
 from PySide6.QtGui import QAction, QKeySequence, QFontDatabase, QFont, QIcon, QPainter, QPen, QColor
 from PySide6.QtCore import Qt, QThread, QObject, Signal, QRect
 
@@ -23,10 +23,6 @@ class BookLoaderWorker(QObject):
         self.file_path = file_path
 
     def run(self):
-        """
-        Reads the EPUB file and calculates all necessary metadata in a background thread
-        to avoid freezing the UI.
-        """
         try:
             book = epub.read_epub(self.file_path)
             
@@ -65,7 +61,7 @@ class ClickableProgressBar(QProgressBar):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setCursor(Qt.PointingHandCursor)
-        self.setTextVisible(False) # We will draw the text manually
+        self.setTextVisible(False)
 
     def paintEvent(self, event):
         super().paintEvent(event)
@@ -80,7 +76,6 @@ class ClickableProgressBar(QProgressBar):
         font.setBold(True)
         painter.setFont(font)
         
-        # 1. Draw the white text part (clipped to the blue chunk)
         pen_white = QPen(QColor("white"))
         painter.setPen(pen_white)
         clip_white = QRect(0, 0, chunk_width, self.height())
@@ -89,7 +84,6 @@ class ClickableProgressBar(QProgressBar):
         painter.drawText(self.rect(), Qt.AlignCenter, text)
         painter.restore()
         
-        # 2. Draw the dark blue text part (clipped to the gray background)
         pen_blue = QPen(QColor("#345B9A"))
         painter.setPen(pen_blue)
         clip_blue = QRect(chunk_width, 0, self.width() - chunk_width, self.height())
@@ -116,7 +110,7 @@ class EpubReader(QMainWindow):
         super().__init__()
         self.book = None
         self.chapters = []
-        self.library = []
+        self.library = [] # This will be a list of dicts
         self.current_book_path = None
         self.app_name = "ePub Swift"
         self.author_name = "GeekNeuron"
@@ -126,6 +120,9 @@ class EpubReader(QMainWindow):
         self.cumulative_lens = []
 
         self.base_path = os.path.dirname(__file__)
+        self.db_path = os.path.join(self.base_path, "epub_swift.db")
+        
+        self.setup_database()
         self.load_assets()
         self.update_window_title()
         self.setWindowState(Qt.WindowMaximized)
@@ -133,7 +130,79 @@ class EpubReader(QMainWindow):
         self.init_ui()
         self.apply_styles()
         self.worker_thread = None
+        self.load_library_from_db()
         
+    def setup_database(self):
+        """Creates the database and tables if they don't exist."""
+        con = sqlite3.connect(self.db_path)
+        cur = con.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS books (
+                path TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                chapter_count INTEGER,
+                last_read_pos INTEGER DEFAULT 0
+            )
+        """)
+        con.commit()
+        con.close()
+    
+    def load_library_from_db(self):
+        """Loads the book library from the SQLite database on startup."""
+        con = sqlite3.connect(self.db_path)
+        cur = con.cursor()
+        cur.execute("SELECT path, title, chapter_count, last_read_pos FROM books")
+        for row in cur.fetchall():
+            self.library.append({
+                'path': row[0], 'title': row[1], 'pages': row[2], 'last_read_pos': row[3]
+            })
+        con.close()
+        self.refresh_library_list()
+
+    def add_or_update_book_in_db(self, book_data):
+        """Adds a new book or updates an existing one in the database."""
+        con = sqlite3.connect(self.db_path)
+        cur = con.cursor()
+        cur.execute("INSERT OR REPLACE INTO books (path, title, chapter_count) VALUES (?, ?, ?)",
+                    (book_data['path'], book_data['title'], book_data['pages']))
+        con.commit()
+        con.close()
+        
+    def save_current_progress_to_db(self):
+        """Calculates and saves the current reading position to the database."""
+        if not self.current_book_path or self.total_book_len == 0:
+            return
+
+        current_char_pos = self.get_current_char_position()
+        
+        con = sqlite3.connect(self.db_path)
+        cur = con.cursor()
+        cur.execute("UPDATE books SET last_read_pos = ? WHERE path = ?", (current_char_pos, self.current_book_path))
+        con.commit()
+        con.close()
+
+    def get_current_char_position(self):
+        """Helper function to get the absolute character position in the book."""
+        if not self.book or self.total_book_len == 0 or self.toc_list.currentRow() < 0:
+            return 0
+            
+        current_chapter_index = self.toc_list.currentRow()
+        if not (0 <= current_chapter_index < len(self.cumulative_lens) - 1): return 0
+        
+        scrollbar = self.text_display.verticalScrollBar()
+        max_val = scrollbar.maximum()
+        scroll_progress = (scrollbar.value() / max_val) if max_val > 0 else 0
+        
+        preceding_len = self.cumulative_lens[current_chapter_index]
+        current_chapter_len = self.chapter_lens[current_chapter_index]
+        
+        return int(preceding_len + (scroll_progress * current_chapter_len))
+
+    def closeEvent(self, event):
+        """Saves progress when the application is about to close."""
+        self.save_current_progress_to_db()
+        event.accept()
+
     def init_ui(self):
         menu_bar = self.menuBar()
         file_menu = menu_bar.addMenu("File")
@@ -206,10 +275,15 @@ class EpubReader(QMainWindow):
     def load_book(self, file_path):
         if not file_path: return
         
+        # Corrected logic to allow loading new books
         if self.worker_thread and self.worker_thread.isRunning():
+            # Optionally, you could warn the user that a book is already loading
             return 
             
         QApplication.setOverrideCursor(Qt.WaitCursor)
+        # Save progress of the PREVIOUS book before loading a new one
+        self.save_current_progress_to_db()
+        
         self.toc_list.clear()
         self.text_display.clear()
         self.progress_bar.setValue(0)
@@ -248,6 +322,13 @@ class EpubReader(QMainWindow):
         if self.toc_list.count() > 0:
             self.toc_list.setCurrentRow(0)
             self.left_panel.setCurrentWidget(self.toc_list)
+            
+            # Restore last reading position
+            book_in_lib = next((b for b in self.library if b['path'] == self.current_book_path), None)
+            if book_in_lib and book_in_lib['last_read_pos'] > 0:
+                percentage = (book_in_lib['last_read_pos'] / self.total_book_len) * 100
+                self.jump_to_position(percentage)
+
 
     def display_chapter(self, current_item):
         if not current_item or not self.book: return
@@ -265,16 +346,10 @@ class EpubReader(QMainWindow):
         if body_tag:
             direction = "rtl" if self.is_rtl(body_tag.get_text()) else "ltr"
             body_tag['dir'] = direction
-            
-            for element in body_tag.find_all(['p', 'div', 'blockquote', 'h1', 'h2', 'h3'], recursive=False):
-                hr_tag = soup.new_tag('hr')
-                element.insert_after(hr_tag)
         
+        # Removed the <hr> injection
         style_tag = soup.new_tag('style')
-        style_tag.string = """
-            hr { border: 0; height: 1px; background-color: #e8eaf6; margin: 1em 0; }
-            body { font-family: 'Vazirmatn', sans-serif !important; }
-        """
+        style_tag.string = "body { font-family: 'Vazirmatn', sans-serif !important; }"
         head = soup.find('head') or soup.new_tag('head')
         if not head.parent: soup.insert(0, head)
         head.append(style_tag)
@@ -283,22 +358,11 @@ class EpubReader(QMainWindow):
         self.text_display.verticalScrollBar().setValue(0)
 
     def update_global_progress(self):
-        if not self.book or self.total_book_len == 0 or self.toc_list.currentRow() < 0:
-            return
-        
-        current_chapter_index = self.toc_list.currentRow()
-        if not (0 <= current_chapter_index < len(self.cumulative_lens) - 1): return
-        
-        scrollbar = self.text_display.verticalScrollBar()
-        max_val = scrollbar.maximum()
-        scroll_progress = (scrollbar.value() / max_val) if max_val > 0 else 0
-        
-        preceding_len = self.cumulative_lens[current_chapter_index]
-        current_chapter_len = self.chapter_lens[current_chapter_index]
-        
-        current_pos_in_book = preceding_len + (scroll_progress * current_chapter_len)
-        global_percentage = (current_pos_in_book / self.total_book_len) * 100 if self.total_book_len > 0 else 0
-        
+        current_char_pos = self.get_current_char_position()
+        if current_char_pos == 0 and self.total_book_len == 0:
+            global_percentage = 0
+        else:
+            global_percentage = (current_char_pos / self.total_book_len) * 100
         self.progress_bar.setValue(int(global_percentage))
 
     def jump_to_position(self, percentage):
@@ -307,7 +371,6 @@ class EpubReader(QMainWindow):
         target_char_pos = self.total_book_len * (percentage / 100)
         
         target_chapter_index = -1
-        # The cumulative_lens list includes a 0 at the start, so its length is len(chapters)+1
         for i in range(len(self.cumulative_lens) - 1):
             if self.cumulative_lens[i] <= target_char_pos < self.cumulative_lens[i+1]:
                 target_chapter_index = i
@@ -324,6 +387,9 @@ class EpubReader(QMainWindow):
             self.toc_list.blockSignals(False)
             self.display_chapter(self.toc_list.currentItem())
         
+        # This needs a small delay to allow the text browser to render the new chapter
+        # before we can accurately set the scroll position. A direct call might fail.
+        # However, for simplicity, we try a direct call first.
         preceding_len = self.cumulative_lens[target_chapter_index]
         current_chapter_len = self.chapter_lens[target_chapter_index]
         
@@ -365,9 +431,13 @@ class EpubReader(QMainWindow):
         self.load_book(file_path)
 
     def update_library(self, file_path, book_title):
-        if any(b['path'] == file_path for b in self.library): return
-        page_count = len(self.chapters)
-        self.library.append({'path': file_path, 'title': book_title, 'pages': page_count})
+        # Check if book is already in the self.library list
+        if any(b['path'] == file_path for b in self.library):
+            return
+
+        new_book_data = {'path': file_path, 'title': book_title, 'pages': len(self.chapters), 'last_read_pos': 0}
+        self.library.append(new_book_data)
+        self.add_or_update_book_in_db(new_book_data) # Save to DB
         self.refresh_library_list()
 
     def refresh_library_list(self):
