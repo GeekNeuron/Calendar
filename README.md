@@ -43,7 +43,6 @@ class BookLoaderWorker(QObject):
                 cumulative += length
                 cum_lens.append(cumulative)
                 if total_len > 0:
-                    # حذف خط اول خط‌کش (تیک صفر درصد)
                     ticks.append((cumulative / total_len) * 100)
             
             result = {
@@ -53,7 +52,6 @@ class BookLoaderWorker(QObject):
             self.finished.emit(result)
         except Exception as e:
             self.finished.emit({'error': str(e)})
-
 
 # --- کلاس نوار پیشرفت قابل کلیک ---
 class RulerProgressBar(QProgressBar):
@@ -90,12 +88,10 @@ class RulerProgressBar(QProgressBar):
         percentage = (pos.x() / self.width()) * 100
         self.jump_requested.emit(percentage)
 
-
 # --- کلاس اصلی برنامه ---
 class EpubReader(QMainWindow):
     def __init__(self):
         super().__init__()
-        # ... (متغیرها مشابه قبل) ...
         self.book = None
         self.chapters = []
         self.library = []
@@ -106,7 +102,6 @@ class EpubReader(QMainWindow):
         self.total_book_len = 0
         self.chapter_lens = []
         self.cumulative_lens = []
-        self.spine_ids = []
 
         self.base_path = os.path.dirname(__file__)
         self.load_assets()
@@ -118,7 +113,6 @@ class EpubReader(QMainWindow):
         self.worker_thread = None
 
     def init_ui(self):
-        # ... (کد منوبار مشابه قبل) ...
         menu_bar = self.menuBar()
         file_menu = menu_bar.addMenu("File")
         open_action = QAction("بارگذاری کتاب (Ctrl+O)", self)
@@ -128,33 +122,40 @@ class EpubReader(QMainWindow):
         menu_bar.addMenu("Edit")
         menu_bar.addMenu("Settings")
         
-        # ... (ساختار UI مشابه قبل) ...
-        self.progress_bar = RulerProgressBar() # استفاده از کلاس جدید
-        self.progress_bar.jump_requested.connect(self.jump_to_position) # اتصال سیگنال جدید
-        # ... بقیه کد init_ui که مشابه قبل است ...
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QHBoxLayout(central_widget)
+        
         self.left_panel = QTabWidget()
         self.left_panel.setMinimumWidth(250)
         self.left_panel.setMaximumWidth(450)
+        
         self.toc_list = QListWidget()
         self.toc_list.setAlternatingRowColors(True)
         self.toc_list.currentItemChanged.connect(self.display_chapter)
+        
         self.library_list = QListWidget()
         self.library_list.setAlternatingRowColors(True)
         self.library_list.itemClicked.connect(self.load_book_from_library)
+        
         self.left_panel.addTab(self.toc_list, "فهرست کتاب")
         self.left_panel.addTab(self.library_list, "کتابخانه")
+        
         right_panel_widget = QWidget()
         right_layout = QVBoxLayout(right_panel_widget)
         right_layout.setContentsMargins(0, 0, 0, 0)
         right_layout.setSpacing(8)
+        
         self.text_display = QTextBrowser()
         self.text_display.setOpenExternalLinks(True)
         self.text_display.verticalScrollBar().valueChanged.connect(self.update_global_progress)
+        
+        self.progress_bar = RulerProgressBar()
+        self.progress_bar.jump_requested.connect(self.jump_to_position)
+        
         right_layout.addWidget(self.text_display)
         right_layout.addWidget(self.progress_bar)
+        
         splitter = QSplitter(Qt.Horizontal)
         splitter.addWidget(self.left_panel)
         splitter.addWidget(right_panel_widget)
@@ -168,7 +169,7 @@ class EpubReader(QMainWindow):
             QMenu { 
                 background-color: #ffffff; 
                 border: 1px solid #dcdde1;
-                border-radius: 8px; /* دورگرد کردن کامل منوی بازشونده */
+                border-radius: 8px;
                 padding: 5px;
             }
             QMenu::item {
@@ -178,7 +179,6 @@ class EpubReader(QMainWindow):
             QMenu::separator { height: 1px; background: #e0e0e0; margin: 5px 0; }
             QMenu::item:selected { background-color: #345B9A; color: white; }
             
-            /* ... (بقیه استایل‌ها مشابه قبل) ... */
             QMenuBar { 
                 background-color: #f2f3f7; border-bottom: 1px solid #dcdde1; padding: 2px;
             }
@@ -218,6 +218,38 @@ class EpubReader(QMainWindow):
         """)
         self.library_list.setObjectName("LibraryList")
 
+    def load_assets(self):
+        font_path = os.path.join(self.base_path, 'assets', 'fonts', 'Vazirmatn-Medium.ttf')
+        if os.path.exists(font_path):
+            font_id = QFontDatabase.addApplicationFont(font_path)
+            if font_id != -1:
+                font_families = QFontDatabase.applicationFontFamilies(font_id)
+                app_font = QFont(font_families[0], 10)
+                QApplication.instance().setFont(app_font)
+        icon_path = os.path.join(self.base_path, 'assets', 'icons', 'app_icon.png')
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
+
+    def is_rtl(self, text, threshold=0.4):
+        if not text: return False
+        clean_text = re.sub('<[^<]+?>', '', text)
+        if not clean_text: return False
+        sample = clean_text[:500]
+        if not sample: return False
+        rtl_chars = len(re.findall(r'[\u0600-\u06FF]', sample))
+        return (rtl_chars / len(sample)) > threshold
+
+    def update_window_title(self, book_title=None):
+        if book_title:
+            self.setWindowTitle(f"{book_title} - {self.app_name} ({self.author_name})")
+        else:
+            self.setWindowTitle(f"{self.app_name} ({self.author_name})")
+
+    def open_file_dialog(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "یک فایل EPUB انتخاب کنید", "", "EPUB Files (*.epub)")
+        if file_path:
+            self.load_book(file_path)
+
     def load_book(self, file_path):
         if not file_path: return
         QApplication.setOverrideCursor(Qt.WaitCursor)
@@ -242,14 +274,12 @@ class EpubReader(QMainWindow):
             
             self.worker_thread.start()
 
-            # ... (بقیه کد load_book برای پر کردن UI که سریع است) ...
             book_title_meta = self.book.get_metadata('DC', 'title')
             book_title = book_title_meta[0][0] if book_title_meta else os.path.basename(file_path)
             self.update_window_title(book_title)
             self.update_library(file_path, book_title)
 
             self.chapters = []
-            self.spine_ids = [item_id for item_id, _ in self.book.spine]
             
             toc_is_rtl = self.is_rtl(self.book.toc[0].title if self.book.toc else "")
             self.toc_list.setLayoutDirection(Qt.RightToLeft if toc_is_rtl else Qt.LeftToRight)
@@ -268,7 +298,6 @@ class EpubReader(QMainWindow):
             QApplication.restoreOverrideCursor()
 
     def on_book_data_loaded(self, result):
-        """اسلات برای دریافت نتایج از ترد پردازشگر."""
         if 'error' in result:
             print(f"Error in worker thread: {result['error']}")
         else:
@@ -280,30 +309,23 @@ class EpubReader(QMainWindow):
         QApplication.restoreOverrideCursor()
 
     def display_chapter(self, current_item):
-        # ... (کد display_chapter مشابه قبل با یک تغییر مهم) ...
-        style_tag = soup.new_tag('style')
-        style_tag.string = f"""
-            /* اصلاح خط‌کشی برای اعمال به تگ‌های بیشتر */
-            p, div, blockquote {{
-                border-bottom: 1px solid #e0e6f0;
-                padding-bottom: 8px; 
-                margin-bottom: 8px; /* ایجاد فاصله بیشتر */
-            }}
-            /* ... بقیه استایل فونت و جهت‌گیری ... */
-        """
-        # ... بقیه کد display_chapter که مشابه قبل است ...
         if not current_item or not self.book: return
         self.update_global_progress()
+        
         selected_index = self.toc_list.row(current_item)
         if not (0 <= selected_index < len(self.chapters)): return
+        
         chapter_info = self.chapters[selected_index]
         item = self.book.get_item_with_href(chapter_info['href'])
         content_bytes = item.get_content()
         soup = BeautifulSoup(content_bytes, 'html.parser')
+        
         self.text_display.setToolTip("")
+        
         body_text = soup.get_text()
         content_is_rtl = self.is_rtl(body_text)
         direction = "rtl" if content_is_rtl else "ltr"
+        
         style_tag = soup.new_tag('style')
         style_tag.string = f"""
             p, div, blockquote {{
@@ -320,32 +342,48 @@ class EpubReader(QMainWindow):
         head = soup.find('head') or soup.new_tag('head')
         if not head.parent: soup.insert(0, head)
         head.append(style_tag)
+        
         self.text_display.setHtml(soup.prettify())
         self.text_display.verticalScrollBar().setValue(0)
 
+    def update_global_progress(self):
+        if not self.book or self.total_book_len == 0 or self.toc_list.currentRow() < 0:
+            return
+        
+        current_chapter_index = self.toc_list.currentRow()
+        
+        scrollbar = self.text_display.verticalScrollBar()
+        max_val = scrollbar.maximum()
+        scroll_progress = (scrollbar.value() / max_val) if max_val > 0 else 0
+        
+        preceding_len = self.cumulative_lens[current_chapter_index]
+        current_chapter_len = self.chapter_lens[current_chapter_index]
+        
+        current_pos_in_book = preceding_len + (scroll_progress * current_chapter_len)
+        global_percentage = (current_pos_in_book / self.total_book_len) * 100
+        
+        self.progress_bar.setValue(int(global_percentage))
+
     def jump_to_position(self, percentage):
-        """پرش به بخش مورد نظر از کتاب بر اساس درصد کلیک شده."""
         if not self.book or self.total_book_len == 0: return
 
         target_char_pos = self.total_book_len * (percentage / 100)
         
-        # پیدا کردن فصل مقصد
         target_chapter_index = -1
-        for i, cum_len in enumerate(self.cumulative_lens):
-            if target_char_pos < cum_len:
-                target_chapter_index = i - 1
+        # The cumulative_lens list includes a 0 at the start, so its length is len(chapters)+1
+        for i in range(len(self.cumulative_lens) - 1):
+            if self.cumulative_lens[i] <= target_char_pos < self.cumulative_lens[i+1]:
+                target_chapter_index = i
                 break
         
         if target_chapter_index == -1: return
 
-        # جلوگیری از فراخوانی‌های تودرتو و اضافی
         if self.toc_list.currentRow() != target_chapter_index:
             self.toc_list.blockSignals(True)
             self.toc_list.setCurrentRow(target_chapter_index)
             self.toc_list.blockSignals(False)
             self.display_chapter(self.toc_list.currentItem())
         
-        # محاسبه و تنظیم اسکرول در فصل مقصد
         preceding_len = self.cumulative_lens[target_chapter_index]
         current_chapter_len = self.chapter_lens[target_chapter_index]
         
@@ -354,32 +392,25 @@ class EpubReader(QMainWindow):
             scrollbar = self.text_display.verticalScrollBar()
             new_scroll_value = int(progress_in_chapter * scrollbar.maximum())
             scrollbar.setValue(new_scroll_value)
-    
-    # ... سایر متدها بدون تغییر باقی می‌مانند ...
-    # (load_assets, is_rtl, update_window_title, open_file_dialog, update_library, etc.)
-EpubReader.load_assets = load_assets_full
-EpubReader.is_rtl = is_rtl_full
-EpubReader.update_window_title = update_window_title_full
-EpubReader.open_file_dialog = open_file_dialog_full
-EpubReader.update_library = update_library_full
-EpubReader.refresh_library_list = refresh_library_list_full
-EpubReader.load_book_from_library = load_book_from_library_full
-EpubReader.update_global_progress = update_global_progress_full # Assuming this is defined elsewhere
-# Need to define update_global_progress_full
-def update_global_progress_full(self):
-    if not self.book or self.total_book_len == 0 or self.toc_list.currentRow() < 0:
-        return
-    current_chapter_index = self.toc_list.currentRow()
-    scrollbar = self.text_display.verticalScrollBar()
-    max_val = scrollbar.maximum()
-    scroll_progress = (scrollbar.value() / max_val) if max_val > 0 else 0
-    preceding_len = self.cumulative_lens[current_chapter_index]
-    current_chapter_len = self.chapter_lens[current_chapter_index]
-    current_pos_in_book = preceding_len + (scroll_progress * current_chapter_len)
-    global_percentage = (current_pos_in_book / self.total_book_len) * 100
-    self.progress_bar.setValue(int(global_percentage))
-EpubReader.update_global_progress = update_global_progress_full
 
+    def update_library(self, file_path, book_title):
+        if any(b['path'] == file_path for b in self.library): return
+        page_count = len(self.book.toc)
+        self.library.append({'path': file_path, 'title': book_title, 'pages': page_count})
+        self.refresh_library_list()
+
+    def refresh_library_list(self):
+        self.library_list.clear()
+        for book in self.library:
+            item_text = f"📖 {book['title']}\n📄 فصول: {book['pages']}"
+            list_item = QListWidgetItem(item_text)
+            list_item.setData(Qt.UserRole, book['path'])
+            self.library_list.addItem(list_item)
+    
+    def load_book_from_library(self, item):
+        file_path = item.data(Qt.UserRole)
+        if file_path and file_path != self.current_book_path:
+            self.load_book(file_path)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
