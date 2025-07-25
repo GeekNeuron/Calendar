@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
     QListWidget, QListWidgetItem, QProgressBar, QWidget, QVBoxLayout,
     QHBoxLayout, QSplitter, QTabWidget
 )
+# اصلاح در این خط: QRect با حرف بزرگ وارد شده است
 from PySide6.QtGui import QAction, QKeySequence, QFontDatabase, QFont, QIcon, QPainter, QPen, QColor, QRect
 from PySide6.QtCore import Qt, QThread, QObject, Signal
 
@@ -25,12 +26,10 @@ class BookLoaderWorker(QObject):
         try:
             book = epub.read_epub(self.file_path)
             
-            # استخراج اطلاعات اولیه
             book_title_meta = book.get_metadata('DC', 'title')
             title = book_title_meta[0][0] if book_title_meta else os.path.basename(self.file_path)
             chapters = [{'title': item.title, 'href': item.href} for item in book.toc if isinstance(item, epub.Link)]
 
-            # محاسبه اطلاعات پیشرفت
             total_len = 0
             chap_lens = []
             cum_lens = [0]
@@ -62,35 +61,33 @@ class ClickableProgressBar(QProgressBar):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setCursor(Qt.PointingHandCursor)
-        self.setTextVisible(False) # متن پیش‌فرض را خودمان رسم می‌کنیم
+        self.setTextVisible(False)
 
     def paintEvent(self, event):
         super().paintEvent(event)
         painter = QPainter(self)
         
-        # محاسبه عرض بخش پر شده
         progress_ratio = self.value() / self.maximum() if self.maximum() != 0 else 0
         chunk_width = int(self.width() * progress_ratio)
         
-        # آماده‌سازی متن درصد
         text = f"{self.value()}%"
         font = self.font()
         font.setPointSize(9)
         font.setBold(True)
         painter.setFont(font)
         
-        # 1. رسم بخش سفید (روی قسمت آبی)
         pen_white = QPen(QColor("white"))
         painter.setPen(pen_white)
+        # استفاده از QRect با حرف بزرگ
         clip_white = QRect(0, 0, chunk_width, self.height())
         painter.save()
         painter.setClipRect(clip_white)
         painter.drawText(self.rect(), Qt.AlignCenter, text)
         painter.restore()
         
-        # 2. رسم بخش آبی (روی قسمت خاکستری)
         pen_blue = QPen(QColor("#345B9A"))
         painter.setPen(pen_blue)
+        # استفاده از QRect با حرف بزرگ
         clip_blue = QRect(chunk_width, 0, self.width() - chunk_width, self.height())
         painter.save()
         painter.setClipRect(clip_blue)
@@ -111,7 +108,6 @@ class ClickableProgressBar(QProgressBar):
 
 # --- کلاس اصلی برنامه ---
 class EpubReader(QMainWindow):
-    # ... (init و متدهای دیگر که تغییر نکرده‌اند) ...
     def __init__(self):
         super().__init__()
         self.book = None
@@ -135,10 +131,6 @@ class EpubReader(QMainWindow):
         self.worker_thread = None
         
     def init_ui(self):
-        # ... (ساختار UI مشابه قبل با یک تغییر مهم) ...
-        self.progress_bar = ClickableProgressBar() # استفاده از کلاس جدید
-        self.progress_bar.jump_requested.connect(self.jump_to_position) # اتصال سیگنال جدید
-        # ... بقیه کد init_ui که مشابه قبل است ...
         menu_bar = self.menuBar()
         file_menu = menu_bar.addMenu("File")
         open_action = QAction("بارگذاری کتاب (Ctrl+O)", self)
@@ -168,6 +160,8 @@ class EpubReader(QMainWindow):
         self.text_display = QTextBrowser()
         self.text_display.setOpenExternalLinks(True)
         self.text_display.verticalScrollBar().valueChanged.connect(self.update_global_progress)
+        self.progress_bar = ClickableProgressBar()
+        self.progress_bar.jump_requested.connect(self.jump_to_position)
         right_layout.addWidget(self.text_display)
         right_layout.addWidget(self.progress_bar)
         splitter = QSplitter(Qt.Horizontal)
@@ -179,13 +173,11 @@ class EpubReader(QMainWindow):
         main_layout.addWidget(splitter)
 
     def apply_styles(self):
-        # استایل نوار پیشرفت از اینجا حذف می‌شود چون به صورت سفارشی رسم می‌شود
         self.setStyleSheet("""
             QProgressBar {
                 border: none; border-radius: 4px; background-color: #e0e0e0; max-height: 14px;
             }
             QProgressBar::chunk { background-color: #345B9A; border-radius: 4px; }
-            /* ... بقیه استایل‌ها ... */
             QMenu { background-color: #ffffff; border: 1px solid #dcdde1; border-radius: 8px; padding: 5px; }
             QMenu::item { padding: 8px 25px 8px 20px; border-radius: 6px; }
             QMenu::item:selected { background-color: #345B9A; color: white; }
@@ -210,7 +202,6 @@ class EpubReader(QMainWindow):
     def load_book(self, file_path):
         if not file_path: return
         
-        # اگر تردی در حال اجراست، آن را متوقف کن
         if self.worker_thread and self.worker_thread.isRunning():
             return 
             
@@ -218,9 +209,10 @@ class EpubReader(QMainWindow):
         self.toc_list.clear()
         self.text_display.clear()
         self.progress_bar.setValue(0)
+        self.current_book_path = file_path
         
         self.worker_thread = QThread()
-        self.worker = BookLoaderWorker(file_path) # ارسال مسیر فایل به ترد
+        self.worker = BookLoaderWorker(file_path)
         self.worker.moveToThread(self.worker_thread)
         self.worker_thread.started.connect(self.worker.run)
         self.worker.finished.connect(self.on_book_data_loaded)
@@ -243,6 +235,9 @@ class EpubReader(QMainWindow):
 
         self.update_window_title(result['title'])
         self.update_library(self.current_book_path, result['title'])
+        
+        toc_is_rtl = self.is_rtl(self.chapters[0]['title'] if self.chapters else "")
+        self.toc_list.setLayoutDirection(Qt.RightToLeft if toc_is_rtl else Qt.LeftToRight)
 
         self.toc_list.addItems([f"{i+1}. {c['title']}" for i, c in enumerate(self.chapters)])
 
@@ -262,18 +257,15 @@ class EpubReader(QMainWindow):
         content_bytes = item.get_content()
         soup = BeautifulSoup(content_bytes, 'html.parser')
         
-        # --- اصلاح نهایی خط‌کشی و جهت‌گیری ---
         body_tag = soup.find('body')
         if body_tag:
             direction = "rtl" if self.is_rtl(body_tag.get_text()) else "ltr"
             body_tag['dir'] = direction
             
-            # تزریق خط افقی <hr> بعد از هر تگ اصلی
             for element in body_tag.find_all(['p', 'div', 'blockquote', 'h1', 'h2', 'h3'], recursive=False):
                 hr_tag = soup.new_tag('hr')
                 element.insert_after(hr_tag)
         
-        # استایل برای فونت و ظاهر خط جداکننده
         style_tag = soup.new_tag('style')
         style_tag.string = """
             hr { border: 0; height: 1px; background-color: #e8eaf6; margin: 1em 0; }
@@ -286,12 +278,12 @@ class EpubReader(QMainWindow):
         self.text_display.setHtml(soup.prettify())
         self.text_display.verticalScrollBar().setValue(0)
 
-    # ... بقیه متدها (update_global_progress, jump_to_position, و...) ...
     def update_global_progress(self):
         if not self.book or self.total_book_len == 0 or self.toc_list.currentRow() < 0:
             return
         
-        current_chapter_index = self.toc_list.currentRow()
+        current_chapter_index = self.toc_list.row(current_item)
+        if not (0 <= current_chapter_index < len(self.cumulative_lens) -1): return
         
         scrollbar = self.text_display.verticalScrollBar()
         max_val = scrollbar.maximum()
@@ -301,7 +293,7 @@ class EpubReader(QMainWindow):
         current_chapter_len = self.chapter_lens[current_chapter_index]
         
         current_pos_in_book = preceding_len + (scroll_progress * current_chapter_len)
-        global_percentage = (current_pos_in_book / self.total_book_len) * 100
+        global_percentage = (current_pos_in_book / self.total_book_len) * 100 if self.total_book_len > 0 else 0
         
         self.progress_bar.setValue(int(global_percentage))
 
@@ -316,7 +308,10 @@ class EpubReader(QMainWindow):
                 target_chapter_index = i
                 break
         
-        if target_chapter_index == -1: return
+        if target_chapter_index == -1 and target_char_pos >= self.cumulative_lens[-1]:
+             target_chapter_index = len(self.cumulative_lens) - 2
+
+        if target_chapter_index < 0: return
 
         if self.toc_list.currentRow() != target_chapter_index:
             self.toc_list.blockSignals(True)
