@@ -6,14 +6,14 @@ from PySide6.QtWidgets import (
     QListWidget, QListWidgetItem, QProgressBar, QWidget, QVBoxLayout,
     QHBoxLayout, QSplitter, QTabWidget
 )
-from PySide6.QtGui import QAction, QKeySequence, QFontDatabase, QFont, QIcon, QPainter, QPen
+from PySide6.QtGui import QAction, QKeySequence, QFontDatabase, QFont, QIcon
 from PySide6.QtCore import Qt, QThread, QObject, Signal
 
 import ebooklib
 from ebooklib import epub
 from bs4 import BeautifulSoup
 
-# --- کلاس Worker برای پردازش کتاب در پس‌زمینه ---
+# --- کلاس Worker برای پردازش کتاب در پس‌زمینه (بدون محاسبه خط‌کش) ---
 class BookLoaderWorker(QObject):
     finished = Signal(dict)
 
@@ -22,15 +22,11 @@ class BookLoaderWorker(QObject):
         self.book = book
 
     def run(self):
-        """محاسبه طول کل کتاب و هر فصل برای نوار پیشرفت جامع."""
         total_len = 0
         chap_lens = []
         cum_lens = [0]
-        ticks = []
-
         try:
             spine_items = [self.book.get_item_with_id(item_id) for item_id, _ in self.book.spine]
-
             for item in spine_items:
                 if item and item.get_type() == ebooklib.ITEM_DOCUMENT:
                     content = item.get_content()
@@ -42,51 +38,12 @@ class BookLoaderWorker(QObject):
             for length in chap_lens:
                 cumulative += length
                 cum_lens.append(cumulative)
-                if total_len > 0:
-                    ticks.append((cumulative / total_len) * 100)
             
-            result = {
-                'total_len': total_len, 'chap_lens': chap_lens, 
-                'cum_lens': cum_lens, 'ticks': ticks
-            }
+            result = {'total_len': total_len, 'chap_lens': chap_lens, 'cum_lens': cum_lens}
             self.finished.emit(result)
         except Exception as e:
             self.finished.emit({'error': str(e)})
 
-# --- کلاس نوار پیشرفت قابل کلیک ---
-class RulerProgressBar(QProgressBar):
-    jump_requested = Signal(float)
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._ticks = []
-        self.setCursor(Qt.PointingHandCursor)
-
-    def set_ticks(self, tick_percentages):
-        self._ticks = tick_percentages
-        self.update()
-
-    def paintEvent(self, event):
-        super().paintEvent(event)
-        painter = QPainter(self)
-        pen = QPen(Qt.darkGray, 1, Qt.DashLine)
-        painter.setPen(pen)
-        width, height = self.width(), self.height()
-        for percent in self._ticks:
-            x = int(width * (percent / 100.0))
-            painter.drawLine(x, 0, x, height)
-    
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.process_jump(event.pos())
-
-    def mouseMoveEvent(self, event):
-        if event.buttons() & Qt.LeftButton:
-            self.process_jump(event.pos())
-            
-    def process_jump(self, pos):
-        percentage = (pos.x() / self.width()) * 100
-        self.jump_requested.emit(percentage)
 
 # --- کلاس اصلی برنامه ---
 class EpubReader(QMainWindow):
@@ -150,8 +107,9 @@ class EpubReader(QMainWindow):
         self.text_display.setOpenExternalLinks(True)
         self.text_display.verticalScrollBar().valueChanged.connect(self.update_global_progress)
         
-        self.progress_bar = RulerProgressBar()
-        self.progress_bar.jump_requested.connect(self.jump_to_position)
+        # استفاده از نوار پیشرفت استاندارد
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setTextVisible(True) # نمایش متن درصد
         
         right_layout.addWidget(self.text_display)
         right_layout.addWidget(self.progress_bar)
@@ -166,6 +124,20 @@ class EpubReader(QMainWindow):
         
     def apply_styles(self):
         self.setStyleSheet("""
+            QProgressBar {
+                border: none;
+                border-radius: 4px;
+                background-color: #e0e0e0;
+                max-height: 14px; /* کمی ارتفاع بیشتر برای نمایش بهتر متن */
+                text-align: center; /* مرکزچین کردن درصد */
+                color: white; /* رنگ متن درصد */
+                font-size: 9px; /* کوچک کردن فونت درصد */
+                font-weight: bold;
+            }
+            QProgressBar::chunk {
+                background-color: #345B9A;
+                border-radius: 4px;
+            }
             QMenu { 
                 background-color: #ffffff; 
                 border: 1px solid #dcdde1;
@@ -176,7 +148,6 @@ class EpubReader(QMainWindow):
                 padding: 8px 25px 8px 20px;
                 border-radius: 6px;
             }
-            QMenu::separator { height: 1px; background: #e0e0e0; margin: 5px 0; }
             QMenu::item:selected { background-color: #345B9A; color: white; }
             
             QMenuBar { 
@@ -201,54 +172,16 @@ class EpubReader(QMainWindow):
             QListWidget::item { padding: 8px; border-radius: 4px; }
             QListWidget::item:alternate { background-color: #f8f9fa; }
             QListWidget::item:selected { background-color: #345B9A; color: white; }
-            #LibraryList QListWidget::item { padding: 12px 8px; }
             QTextBrowser {
                 background-color: #ffffff; border: none; border-radius: 8px;
                 padding: 20px; font-size: 16px; color: #34495e;
             }
-            QProgressBar {
-                border: none; border-radius: 4px; background-color: #e0e0e0; max-height: 12px;
-            }
-            QProgressBar::chunk { background-color: #345B9A; border-radius: 4px; }
             QScrollBar:vertical {
                 border: none; background: #f8f9fa; width: 10px; margin: 0; border-radius: 5px;
             }
             QScrollBar::handle:vertical { background: #bdc3c7; min-height: 20px; border-radius: 5px; }
             QScrollBar::handle:vertical:hover { background: #95a5a6; }
         """)
-        self.library_list.setObjectName("LibraryList")
-
-    def load_assets(self):
-        font_path = os.path.join(self.base_path, 'assets', 'fonts', 'Vazirmatn-Medium.ttf')
-        if os.path.exists(font_path):
-            font_id = QFontDatabase.addApplicationFont(font_path)
-            if font_id != -1:
-                font_families = QFontDatabase.applicationFontFamilies(font_id)
-                app_font = QFont(font_families[0], 10)
-                QApplication.instance().setFont(app_font)
-        icon_path = os.path.join(self.base_path, 'assets', 'icons', 'app_icon.png')
-        if os.path.exists(icon_path):
-            self.setWindowIcon(QIcon(icon_path))
-
-    def is_rtl(self, text, threshold=0.4):
-        if not text: return False
-        clean_text = re.sub('<[^<]+?>', '', text)
-        if not clean_text: return False
-        sample = clean_text[:500]
-        if not sample: return False
-        rtl_chars = len(re.findall(r'[\u0600-\u06FF]', sample))
-        return (rtl_chars / len(sample)) > threshold
-
-    def update_window_title(self, book_title=None):
-        if book_title:
-            self.setWindowTitle(f"{book_title} - {self.app_name} ({self.author_name})")
-        else:
-            self.setWindowTitle(f"{self.app_name} ({self.author_name})")
-
-    def open_file_dialog(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "یک فایل EPUB انتخاب کنید", "", "EPUB Files (*.epub)")
-        if file_path:
-            self.load_book(file_path)
 
     def load_book(self, file_path):
         if not file_path: return
@@ -256,7 +189,6 @@ class EpubReader(QMainWindow):
         self.toc_list.clear()
         self.text_display.clear()
         self.progress_bar.setValue(0)
-        self.progress_bar.set_ticks([])
 
         try:
             self.book = epub.read_epub(file_path)
@@ -298,13 +230,10 @@ class EpubReader(QMainWindow):
             QApplication.restoreOverrideCursor()
 
     def on_book_data_loaded(self, result):
-        if 'error' in result:
-            print(f"Error in worker thread: {result['error']}")
-        else:
+        if 'error' not in result:
             self.total_book_len = result['total_len']
             self.chapter_lens = result['chap_lens']
             self.cumulative_lens = result['cum_lens']
-            self.progress_bar.set_ticks(result['ticks'])
             self.update_global_progress()
         QApplication.restoreOverrideCursor()
 
@@ -326,17 +255,23 @@ class EpubReader(QMainWindow):
         content_is_rtl = self.is_rtl(body_text)
         direction = "rtl" if content_is_rtl else "ltr"
         
+        # --- اصلاح اصلی برای جهت‌گیری و خط‌کشی ---
+        # 1. افزودن ویژگی 'dir' به تگ body برای جهت‌گیری قوی‌تر
+        body_tag = soup.find('body')
+        if body_tag:
+            body_tag['dir'] = direction
+
+        # 2. تزریق استایل با سلکتور عمومی‌تر برای خط‌کشی
         style_tag = soup.new_tag('style')
         style_tag.string = f"""
-            p, div, blockquote {{
-                border-bottom: 1px solid #e0e6f0;
-                padding-bottom: 8px;
-                margin-bottom: 8px;
+            /* اعمال خط جداکننده به تمام فرزندان مستقیم body */
+            body > * {{
+                border-bottom: 1px solid #e8eaf6; /* رنگ آبی بسیار کمرنگ و ملایم */
+                padding-bottom: 0.5em; 
+                margin-bottom: 0.5em;
             }}
-            body, p, div, span, li, a, h1, h2, h3, h4 {{ 
+            body {{ 
                 font-family: 'Vazirmatn', sans-serif !important; 
-                direction: {direction};
-                text-align: {"right" if direction == "rtl" else "left"};
             }}
         """
         head = soup.find('head') or soup.new_tag('head')
@@ -364,34 +299,37 @@ class EpubReader(QMainWindow):
         
         self.progress_bar.setValue(int(global_percentage))
 
-    def jump_to_position(self, percentage):
-        if not self.book or self.total_book_len == 0: return
+    # --- سایر متدها بدون تغییر ---
+    def load_assets(self):
+        font_path = os.path.join(self.base_path, 'assets', 'fonts', 'Vazirmatn-Medium.ttf')
+        if os.path.exists(font_path):
+            font_id = QFontDatabase.addApplicationFont(font_path)
+            if font_id != -1:
+                font_families = QFontDatabase.applicationFontFamilies(font_id)
+                app_font = QFont(font_families[0], 10)
+                QApplication.instance().setFont(app_font)
+        icon_path = os.path.join(self.base_path, 'assets', 'icons', 'app_icon.png')
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
 
-        target_char_pos = self.total_book_len * (percentage / 100)
-        
-        target_chapter_index = -1
-        # The cumulative_lens list includes a 0 at the start, so its length is len(chapters)+1
-        for i in range(len(self.cumulative_lens) - 1):
-            if self.cumulative_lens[i] <= target_char_pos < self.cumulative_lens[i+1]:
-                target_chapter_index = i
-                break
-        
-        if target_chapter_index == -1: return
+    def is_rtl(self, text, threshold=0.4):
+        if not text: return False
+        clean_text = re.sub('<[^<]+?>', '', text)
+        if not clean_text: return False
+        sample = clean_text[:500]
+        if not sample: return False
+        rtl_chars = len(re.findall(r'[\u0600-\u06FF]', sample))
+        return (rtl_chars / len(sample)) > threshold
 
-        if self.toc_list.currentRow() != target_chapter_index:
-            self.toc_list.blockSignals(True)
-            self.toc_list.setCurrentRow(target_chapter_index)
-            self.toc_list.blockSignals(False)
-            self.display_chapter(self.toc_list.currentItem())
-        
-        preceding_len = self.cumulative_lens[target_chapter_index]
-        current_chapter_len = self.chapter_lens[target_chapter_index]
-        
-        if current_chapter_len > 0:
-            progress_in_chapter = (target_char_pos - preceding_len) / current_chapter_len
-            scrollbar = self.text_display.verticalScrollBar()
-            new_scroll_value = int(progress_in_chapter * scrollbar.maximum())
-            scrollbar.setValue(new_scroll_value)
+    def update_window_title(self, book_title=None):
+        if book_title:
+            self.setWindowTitle(f"{book_title} - {self.app_name} ({self.author_name})")
+        else:
+            self.setWindowTitle(f"{self.app_name} ({self.author_name})")
+
+    def open_file_dialog(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "یک فایل EPUB انتخاب کنید", "", "EPUB Files (*.epub)")
+        self.load_book(file_path)
 
     def update_library(self, file_path, book_title):
         if any(b['path'] == file_path for b in self.library): return
@@ -411,6 +349,7 @@ class EpubReader(QMainWindow):
         file_path = item.data(Qt.UserRole)
         if file_path and file_path != self.current_book_path:
             self.load_book(file_path)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
