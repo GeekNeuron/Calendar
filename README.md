@@ -1,10 +1,11 @@
 import sys
+import os
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QFileDialog, QTextBrowser,
     QListWidget, QProgressBar, QWidget, QVBoxLayout,
-    QHBoxLayout, QSplitter
+    QSplitter
 )
-from PySide6.QtGui import QAction, QKeySequence
+from PySide6.QtGui import QAction, QKeySequence, QFontDatabase, QFont, QIcon
 from PySide6.QtCore import Qt
 import ebooklib
 from ebooklib import epub
@@ -12,44 +13,61 @@ from bs4 import BeautifulSoup
 
 class EpubReader(QMainWindow):
     """
-    کلاس اصلی نرم‌افزار کتاب‌خوان EPUB
+    کلاس اصلی نرم‌افزار کتاب‌خوان EPUB با ظاهر مدرن
     """
     def __init__(self):
         super().__init__()
 
         # --- متغیرهای مربوط به کتاب ---
         self.book = None
-        self.chapters = []  # لیستی برای نگهداری اطلاعات فصول (عنوان، لینک)
-        self.spine = []     # لیستی برای نگهداری ترتیب خواندن فصول
+        self.chapters = []
+        self.spine = []
+        
+        # --- بارگذاری فونت و آیکون ---
+        self.base_path = os.path.dirname(__file__)
+        self.load_assets()
 
         # --- تنظیمات اولیه پنجره ---
         self.setWindowTitle("کتاب‌خوان EPUB")
-        self.setGeometry(100, 100, 1200, 800)
-        
-        # اجرای برنامه به صورت تمام صفحه
-        self.showFullScreen()
+        # اجرای برنامه به صورت ماکسیمایز (تمام صفحه نرمال)
+        self.showMaximized()
         
         # --- راه‌اندازی رابط کاربری ---
         self.init_ui()
         
-        # --- اعمال تم روشن ---
-        self.apply_light_theme()
+        # --- اعمال استایل مدرن ---
+        self.apply_styles()
+
+    def load_assets(self):
+        """
+        بارگذاری فونت سفارشی و آیکون برنامه از پوشه assets
+        """
+        # بارگذاری فونت وزیرمتن
+        font_path = os.path.join(self.base_path, 'assets', 'fonts', 'Vazirmatn-Medium.ttf')
+        if os.path.exists(font_path):
+            font_id = QFontDatabase.addApplicationFont(font_path)
+            if font_id != -1:
+                font_families = QFontDatabase.applicationFontFamilies(font_id)
+                app_font = QFont(font_families[0], 11)
+                QApplication.instance().setFont(app_font)
+        
+        # تنظیم آیکون برنامه
+        icon_path = os.path.join(self.base_path, 'assets', 'icons', 'app_icon.png')
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
+
 
     def init_ui(self):
         """
         متد ساخت و چیدمان تمام اجزای رابط کاربری
         """
-        # --- ساخت منو بار (Menu Bar) ---
+        # --- ساخت منو بار ---
         menu_bar = self.menuBar()
-        
-        # منوی File
         file_menu = menu_bar.addMenu("File")
-        open_action = QAction("بارگذاری کتاب (Load EPUB)...", self)
+        open_action = QAction("بارگذاری کتاب (Ctrl+O)", self)
         open_action.setShortcut(QKeySequence("Ctrl+O"))
         open_action.triggered.connect(self.open_file_dialog)
         file_menu.addAction(open_action)
-
-        # منوهای Edit و Settings (فعلا خالی)
         menu_bar.addMenu("Edit")
         menu_bar.addMenu("Settings")
         
@@ -57,153 +75,183 @@ class EpubReader(QMainWindow):
         
         # پنل چپ: لیست فصول کتاب
         self.toc_list = QListWidget()
+        self.toc_list.setAlternatingRowColors(True) # فعال‌سازی رنگ‌بندی یکی در میان
         self.toc_list.currentItemChanged.connect(self.display_chapter)
 
         # پنل راست: نمایش محتوای کتاب
         self.text_display = QTextBrowser()
-        self.text_display.setOpenExternalLinks(True) # برای باز کردن لینک‌های خارجی در مرورگر
+        self.text_display.setOpenExternalLinks(True)
 
         # پنل پایین: نوار پیشرفت
         self.progress_bar = QProgressBar()
         self.progress_bar.setTextVisible(True)
-        self.progress_bar.setFormat("%p%") # نمایش به صورت درصد
+        self.progress_bar.setFormat("%p%")
 
         # --- چیدمان (Layout) ---
-        
-        # ویجت مرکزی برای پنجره اصلی
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
-
-        # چیدمان عمودی اصلی (برای قرار دادن بخش کتاب و نوار پیشرفت)
         main_layout = QVBoxLayout(central_widget)
+        main_layout.setContentsMargins(10, 10, 10, 10) # ایجاد فاصله از لبه‌ها
+        main_layout.setSpacing(10)
 
-        # استفاده از QSplitter برای تقسیم‌بندی قابل تغییر بین لیست فصول و محتوا
         splitter = QSplitter(Qt.Horizontal)
         splitter.addWidget(self.toc_list)
         splitter.addWidget(self.text_display)
-        
-        # تنظیم اندازه اولیه پنل‌ها (پنل محتوا 3 برابر پنل فصول)
-        splitter.setSizes([200, 600])
+        splitter.setSizes([250, 750])
+        splitter.setHandleWidth(2) # نازک کردن جداکننده
 
-        # اضافه کردن اجزا به چیدمان اصلی
         main_layout.addWidget(splitter)
         main_layout.addWidget(self.progress_bar)
 
-    def apply_light_theme(self):
-        """اعمال استایل برای تم روشن"""
+    def apply_styles(self):
+        """اعمال استایل شیت (QSS) برای ظاهر مدرن و چشم‌نواز"""
         self.setStyleSheet("""
             QMainWindow, QWidget {
-                background-color: #f0f0f0;
-                color: #000000;
+                background-color: #f2f3f7; /* رنگ پس‌زمینه اصلی کمی خاکستری */
             }
             QListWidget {
                 background-color: #ffffff;
-                border: 1px solid #cccccc;
+                color: #2c3e50;
+                border: none;
+                border-radius: 8px; /* گوشه‌های گرد */
+                padding: 5px;
                 font-size: 14px;
+            }
+            QListWidget::item {
+                padding: 8px;
+                border-radius: 4px;
+            }
+            QListWidget::item:alternate {
+                background-color: #f8f9fa; /* رنگ ردیف‌های زوج */
+            }
+            QListWidget::item:selected {
+                background-color: #345B9A; /* رنگ آبی تیره برای آیتم انتخاب شده */
+                color: white;
             }
             QTextBrowser {
                 background-color: #ffffff;
-                border: 1px solid #cccccc;
+                border: none;
+                border-radius: 8px;
+                padding: 15px;
                 font-size: 16px;
-            }
-            QMenuBar {
-                background-color: #e8e8e8;
-            }
-            QMenu {
-                background-color: #f8f8f8;
+                color: #34495e;
             }
             QProgressBar {
+                border: none;
+                border-radius: 5px;
+                background-color: #e0e0e0;
+                max-height: 10px; /* نازک کردن نوار پیشرفت */
                 text-align: center;
+                color: transparent; /* مخفی کردن درصد پیش‌فرض */
+            }
+            QProgressBar::chunk {
+                background-color: #345B9A; /* رنگ آبی تیره برای بخش پر شده */
+                border-radius: 5px;
+            }
+            QMenuBar {
+                background-color: #f2f3f7;
+                border-bottom: 1px solid #dcdde1;
+            }
+            QMenu {
+                background-color: #ffffff;
+                border: 1px solid #dcdde1;
+            }
+            QMenu::item:selected {
+                background-color: #345B9A;
+                color: white;
+            }
+            /* استایل اسکرول بار مدرن */
+            QScrollBar:vertical {
+                border: none;
+                background: #f8f9fa;
+                width: 10px;
+                margin: 0px 0px 0px 0px;
+                border-radius: 5px;
+            }
+            QScrollBar::handle:vertical {
+                background: #bdc3c7;
+                min-height: 20px;
+                border-radius: 5px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background: #95a5a6;
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                border: none;
+                background: none;
+                height: 0px;
             }
         """)
 
     def open_file_dialog(self):
-        """باز کردن دیالوگ انتخاب فایل EPUB"""
-        file_path, _ = QFileDialog.getOpenFileName(
-            self,
-            "یک فایل EPUB انتخاب کنید",
-            "",
-            "EPUB Files (*.epub)"
-        )
+        file_path, _ = QFileDialog.getOpenFileName(self, "یک فایل EPUB انتخاب کنید", "", "EPUB Files (*.epub)")
         if file_path:
             self.load_book(file_path)
 
     def load_book(self, file_path):
-        """بارگذاری و پردازش کتاب از مسیر داده شده"""
         try:
             self.book = epub.read_epub(file_path)
-            
-            # پاک کردن اطلاعات کتاب قبلی
             self.toc_list.clear()
             self.text_display.clear()
             self.chapters = []
-            
-            # استخراج ترتیب فصول (spine)
             self.spine = list(self.book.spine)
-
-            # استخراج و نمایش فهرست مطالب (Table of Contents)
+            
+            # افزودن شماره به ابتدای هر فصل
+            chapter_counter = 1
             for item in self.book.toc:
                 if isinstance(item, epub.Link):
                     self.chapters.append({'title': item.title, 'href': item.href})
-                    self.toc_list.addItem(item.title)
-                elif isinstance(item, tuple): # برای فهرست‌های تو در تو
+                    self.toc_list.addItem(f"{chapter_counter}. {item.title}")
+                    chapter_counter += 1
+                elif isinstance(item, tuple):
                     link, _ = item
                     self.chapters.append({'title': link.title, 'href': link.href})
-                    self.toc_list.addItem(link.title)
-            
-            # نمایش فصل اول به صورت پیش‌فرض
+                    self.toc_list.addItem(f"{chapter_counter}. {link.title}")
+                    chapter_counter += 1
+
             if self.toc_list.count() > 0:
                 self.toc_list.setCurrentRow(0)
-
         except Exception as e:
             self.text_display.setText(f"خطا در باز کردن کتاب: \n{e}")
             self.progress_bar.setValue(0)
 
     def display_chapter(self, current_item):
-        """نمایش محتوای فصل انتخاب شده"""
         if not current_item or not self.book:
             return
 
-        # پیدا کردن اطلاعات فصل بر اساس آیتم انتخاب شده
         selected_index = self.toc_list.row(current_item)
-        if selected_index < 0 or selected_index >= len(self.chapters):
+        if not (0 <= selected_index < len(self.chapters)):
             return
-            
+
         chapter_info = self.chapters[selected_index]
-        href = chapter_info['href']
-        
-        # دریافت محتوای فصل از کتاب
-        item = self.book.get_item_with_href(href)
+        item = self.book.get_item_with_href(chapter_info['href'])
         content_bytes = item.get_content()
-        
-        # استفاده از BeautifulSoup برای پاک‌سازی و استخراج بدنه HTML
         soup = BeautifulSoup(content_bytes, 'html.parser')
         
-        # حذف تگ‌های اسکریپت و استایل برای نمایش بهتر
-        for tag in soup(['script', 'style']):
-            tag.decompose()
-            
-        body = soup.find('body')
-        if body:
-            self.text_display.setHtml(body.prettify())
-        else:
-            # اگر تگ body نبود، کل محتوا را نمایش بده
-            self.text_display.setHtml(soup.prettify())
-            
+        # تزریق فونت وزیرمتن و استایل راست‌چین به محتوای کتاب
+        font_style = soup.new_tag('style')
+        font_style.string = """
+            body, p, div, span, li, a, h1, h2, h3, h4 { 
+                font-family: 'Vazirmatn', sans-serif !important; 
+                direction: rtl; 
+            }
+        """
+        
+        head = soup.find('head')
+        if not head:
+            head = soup.new_tag('head')
+            soup.insert(0, head)
+        head.append(font_style)
+
+        self.text_display.setHtml(soup.prettify())
         self.update_progress(item.id)
         
     def update_progress(self, current_item_id):
-        """به‌روزرسانی نوار پیشرفت بر اساس فصل فعلی"""
         try:
-            # پیدا کردن ایندکس فصل فعلی در لیست spine
             total_items = len(self.spine)
-            current_index = 0
-            for i, (item_id, _) in enumerate(self.spine):
-                if item_id == current_item_id:
-                    current_index = i
-                    break
+            current_index = next((i for i, (item_id, _) in enumerate(self.spine) if item_id == current_item_id), -1)
             
-            if total_items > 0:
+            if total_items > 0 and current_index != -1:
                 progress_percentage = int(((current_index + 1) / total_items) * 100)
                 self.progress_bar.setValue(progress_percentage)
         except Exception:
